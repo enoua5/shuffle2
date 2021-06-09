@@ -9,11 +9,15 @@ class ShuffleInter:
     self.p2_cards = []
     self.pointer = {"x": 0, "y": 0}
     self.memory = [[0]]
+    self.pause = 0
+    self.running = True
+    
   def printMem(self):
     for l in self.memory:
       for i in l:
         print(i, end=" ")
       print()
+      
   def realign_memory(self):
     if self.pointer["y"] >= len(self.memory):
       for i in range(self.pointer["y"] + 1 - len(self.memory)):
@@ -32,6 +36,61 @@ class ShuffleInter:
       for line in range(len(self.memory)):
         self.memory[line] = ([0] * -self.pointer["x"]) + self.memory[line]
       self.pointer["x"] = 0
+  
+  def run(self, p1c, p2c):
+    pass
+  
+  def battle(self):
+    p1stakes = []
+    p2stakes = []
+    p1card = self.p1_cards.pop(0)
+    p2card = self.p2_cards.pop(0)
+    
+    self.run(p1card, p2card)
+    
+    # compare values and determine winner of battle
+    # higher card goes on bottom
+    if p1card.value > p2card.value:
+      self.p1_cards.append(p2card)
+      self.p1_cards.append(p1card)
+    elif p2card.value > p1card.value:
+      self.p2_cards.append(p1card)
+      self.p2_cards.append(p2card)
+    # if it's a draw, go to war!
+    else:
+      tie_resolved = False
+      while not(tie_resolved):
+        if len(self.p1_cards) > 0 and len(self.p2_cards) > 0:
+          # add the current cards to the stake pile
+          p1stakes.append(p1card)
+          p2stakes.append(p2card)
+          # add the three stake cards
+          for i in range(3):
+            if len(self.p1_cards) > 1:
+              p1stakes.append(self.p1_cards.pop(0))
+            if len(self.p2_cards) > 1:
+              p2stakes.append(self.p2_cards.pop(0))
+              
+          p1card = self.p1_cards.pop(0)
+          p2card = self.p2_cards.pop(0)
+          self.run(p1card, p2card)
+          
+          if p2card.value > p1card.value:
+            self.p2_cards += p1stakes + [p1card] + p2stakes + [p2card]
+            tie_resolved = True
+            
+          elif p1card.value > p2card.value:
+            self.p1_cards += p2stakes + [p2card] + p1stakes + [p1card]
+            tie_resolved = True
+          
+          # else continue war
+          
+    
+  def step(self):
+    if len(self.p1_cards) == 0 or len(self.p2_cards) == 0:
+      self.running = False
+      return
+    self.battle()
         
      
       
@@ -146,6 +205,7 @@ def main():
   parser.add_argument('-v', action="store_true", help="show version number")
   parser.add_argument('-b', action="store_true", help="allow bracket notation in program")
   parser.add_argument('-l', action="store_true", help="run in legacy mode, disabling all v2.0 features")
+  parser.add_argument("-s", type=int, default=-1, help="Only run S steps before stopping")
   parser.add_argument('ifile', help="file containing the program to be interpreted")
   args = parser.parse_args()
   
@@ -180,9 +240,12 @@ def main():
     shuff.pointer = parsePointer(sections[2])
     shuff.memory = parseMemory(sections[3])
   shuff.realign_memory()
-  shuff.printMem()
-  print(shuff.pointer)
   
+  steps = args.s
+  while shuff.running and steps != 0:
+    if steps > 0:
+      steps -= 1
+    shuff.step()
   
 if __name__ == "__main__":
   main()
