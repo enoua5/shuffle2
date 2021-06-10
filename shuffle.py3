@@ -179,7 +179,9 @@ class ShuffleInter:
         self.memory[self.pointer["y"]][self.pointer["x"]] %= 256
             
     else:
+      self.versay("[ignored: "+str(self.pause)+" left]")
       self.pause -= 1
+    self.versay("")
   
   def battle(self):
     p1stakes = []
@@ -236,7 +238,7 @@ class ShuffleInter:
       for i in self.p2_cards:
         i.print()
         print(" ", end="")
-      print("\n")
+      print()
       
   
     if len(self.p1_cards) == 0 or len(self.p2_cards) == 0:
@@ -399,6 +401,7 @@ def main():
   shuff.realign_memory()
   
   if args.verbose:
+    print("Initial memory:")
     shuff.printMem()
     print()
   
