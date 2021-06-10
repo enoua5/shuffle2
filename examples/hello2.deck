@@ -1,0 +1,23 @@
+Hello world program using version 2.0 features!
+Also shown off in this program: comments!
+We can include pretty arbitrary text here, we just need to avoid
+using any \n\n combos, and avoiding open square brackets is also good.
+Since this program uses a bracket card, it must be ran with the -b flag
+Anyway, here's the instuctions that will be being ran:
+if 0, skip (since there's no if 1, we have to do this double skip thing)
+skip
+halt
+output char
+right
+jump to next iteration of the program
+Card parings: HS HD J* CD SS HH
+🂱🂾🃟🃞🂡[h18] <- evil bracket card! 18 is too far for us to jump using regular cards (where the limit would be 13), so we have to make the jump to the other side of the program like this.
+
+🂮🃁🂮🃁🂮🂱🂮 <- this last card is an arbitrary high card
+No comments allowed after this section :(
+So, to explain the below parts here, the "0 0" isjust saying to start the data pointer at (0,0) which is default, but we have to specify to be allowed to use the extra sections.
+The numbers after that are the string "Hello, world!\n" in ascii. This gets loaded into the memory space before starting.
+
+0 0
+
+72 101 108 108 111 44 32 119 111 114 108 100 33 10

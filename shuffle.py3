@@ -84,31 +84,31 @@ class ShuffleInter:
           else:
             inp = input()
           if len(inp) > 0:
-            self.memory[self.pointer["x"]][self.pointer["y"]] = ord(inp[0]) % 256
+            self.memory[self.pointer["y"]][self.pointer["x"]] = ord(inp[0]) % 256
             # pop the first character and set the input buffer
             inp = inp[1:]
             self.charInputBuffer = inp
           else:
-            self.memory[self.pointer["x"]][self.pointer["y"]] = 0
+            self.memory[self.pointer["y"]][self.pointer["x"]] = 0
             
         elif p2c.suit == "c":
           # input int
           self.versay("input int")
           inp = input()
           if inp.isdigit():
-            self.memory[self.pointer["x"]][self.pointer["y"]] = int(inp) % 256
+            self.memory[self.pointer["y"]][self.pointer["x"]] = int(inp) % 256
           else:
-            self.memory[self.pointer["x"]][self.pointer["y"]] = 0
+            self.memory[self.pointer["y"]][self.pointer["x"]] = 0
         elif p2c.suit == "h":
           #output int
           self.versay("output int")
-          print(self.memory[self.pointer["x"]][self.pointer["y"]], end="")
+          print(self.memory[self.pointer["y"]][self.pointer["x"]], end="")
         
         elif p2c.suit == "d":
           # output char
           self.versay("output char")
           try:
-            print(char(self.memory[self.pointer["x"]][self.pointer["y"]]), end="")
+            print(chr(self.memory[self.pointer["y"]][self.pointer["x"]]), end="")
           except UnicodeEncodeError:
             print("?", end="")
             
@@ -117,13 +117,15 @@ class ShuffleInter:
         if p2c.suit == "s":
           # if 0, skip 1
           self.versay("if 0, skip 1")
-          if self.memory[self.pointer["x"]][self.pointer["y"]] == 0:
+          if self.memory[self.pointer["y"]][self.pointer["x"]] == 0:
+            self.versay("(yes)")
             self.pause = 1
         
         elif p2c.suit == "c":
           # if 0, skip p1c.value
           self.versay("if 0, skip value: " + str(p1c.value))
-          if self.memory[self.pointer["x"]][self.pointer["y"]] == 0:
+          if self.memory[self.pointer["y"]][self.pointer["x"]] == 0:
+            self.versay("(yes)")
             self.pause = p1c.value
         
         elif p2c.suit == "h":
@@ -141,21 +143,21 @@ class ShuffleInter:
         if p2c.suit == "s":
           # sub p1c.value
           self.versay("sub " + str(p1c.value))
-          self.memory[self.pointer["x"]][self.pointer["y"]] -= p1c.value
+          self.memory[self.pointer["y"]][self.pointer["x"]] -= p1c.value
         elif p2c.suit == "c":
           # add p1c.value
           self.versay("add " + str(p1c.value))
-          self.memory[self.pointer["x"]][self.pointer["y"]] += p1c.value
+          self.memory[self.pointer["y"]][self.pointer["x"]] += p1c.value
         if p2c.suit == "h":
           # inc
           self.versay("inc")
-          self.memory[self.pointer["x"]][self.pointer["y"]] += 1
+          self.memory[self.pointer["y"]][self.pointer["x"]] += 1
         elif p2c.suit == "d":
           # dec
           self.versay("dec")
-          self.memory[self.pointer["x"]][self.pointer["y"]] -= 1
+          self.memory[self.pointer["y"]][self.pointer["x"]] -= 1
           
-        self.memory[self.pointer["x"]][self.pointer["y"]] %= 256
+        self.memory[self.pointer["y"]][self.pointer["x"]] %= 256
             
     else:
       self.pause -= 1
@@ -207,6 +209,17 @@ class ShuffleInter:
           
     
   def step(self):
+    if self.verbose:
+      for i in self.p1_cards:
+        i.print()
+        print(" ", end="")
+      print()
+      for i in self.p2_cards:
+        i.print()
+        print(" ", end="")
+      print("\n")
+      
+  
     if len(self.p1_cards) == 0 or len(self.p2_cards) == 0:
       self.running = False
       return
@@ -224,7 +237,7 @@ class Card:
     self.suit = suit
     self.value = value
   def print(self):
-    print(self.suit + str(self.value))
+    print(self.suit + str(self.value), end="")
 
 def parseMemory(s):
   out = []
@@ -364,6 +377,10 @@ def main():
     shuff.memory = parseMemory(sections[3])
   shuff.realign_memory()
   
+  if args.verbose:
+    shuff.printMem()
+    print()
+    
   steps = args.s
   while shuff.running and steps != 0:
     if steps > 0:
