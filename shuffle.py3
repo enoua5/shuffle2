@@ -11,7 +11,13 @@ class ShuffleInter:
     self.memory = [[0]]
     self.pause = 0
     self.running = True
+    self.charInputBuffer = ""
+    self.verbose = False
     
+  def versay(self, what):
+    if(self.verbose):
+      print(what) 
+  
   def printMem(self):
     for l in self.memory:
       for i in l:
@@ -38,7 +44,121 @@ class ShuffleInter:
       self.pointer["x"] = 0
   
   def run(self, p1c, p2c):
-    pass
+    if self.pause <= 0:
+      if p1c.suit == "j" or p2c.suit == "j":
+        self.versay("abort")
+        self.running = False
+        return
+        
+      if p1c.suit == "s":
+        # pointer movement instructions
+        if p2c.suit == "s":
+          # right
+          self.versay("right")
+          self.pointer["x"] += 1
+          
+        elif p2c.suit == "c":
+          # left
+          self.versay("left")
+          self.pointer["x"] -= 1
+          
+        if p2c.suit == "h":
+          # down
+          self.versay("down")
+          self.pointer["y"] += 1
+          
+        elif p2c.suit == "d":
+          # up
+          self.versay("up")
+          self.pointer["x"] -= 1
+        # the pointer might have moved outside of the initialized ares
+        self.realign_memory()
+      
+      elif p1c.suit == "c":
+        # IO instructions
+        if p2c.suit == "s":
+          # input char
+          self.versay("input char")
+          if len(self.charInputBuffer) > 0:
+            inp = self.charInputBuffer
+          else:
+            inp = input()
+          if len(inp) > 0:
+            self.memory[self.pointer["x"]][self.pointer["y"]] = ord(inp[0]) % 256
+            # pop the first character and set the input buffer
+            inp = inp[1:]
+            self.charInputBuffer = inp
+          else:
+            self.memory[self.pointer["x"]][self.pointer["y"]] = 0
+            
+        elif p2c.suit == "c":
+          # input int
+          self.versay("input int")
+          inp = input()
+          if inp.isdigit():
+            self.memory[self.pointer["x"]][self.pointer["y"]] = int(inp) % 256
+          else:
+            self.memory[self.pointer["x"]][self.pointer["y"]] = 0
+        elif p2c.suit == "h":
+          #output int
+          self.versay("output int")
+          print(self.memory[self.pointer["x"]][self.pointer["y"]], end="")
+        
+        elif p2c.suit == "d":
+          # output char
+          self.versay("output char")
+          try:
+            print(char(self.memory[self.pointer["x"]][self.pointer["y"]]), end="")
+          except UnicodeEncodeError:
+            print("?", end="")
+            
+      elif p1c.suit == "h":
+        # jump instuctions
+        if p2c.suit == "s":
+          # if 0, skip 1
+          self.versay("if 0, skip 1")
+          if self.memory[self.pointer["x"]][self.pointer["y"]] == 0:
+            self.pause = 1
+        
+        elif p2c.suit == "c":
+          # if 0, skip p1c.value
+          self.versay("if 0, skip value: " + str(p1c.value))
+          if self.memory[self.pointer["x"]][self.pointer["y"]] == 0:
+            self.pause = p1c.value
+        
+        elif p2c.suit == "h":
+          # skip p1c.value
+          self.versay("skip value: " + str(p1c.value))
+          self.pause = p1c.value
+        
+        elif p2c.suit == "d":
+          # skip 1
+          self.versay("skip 1")
+          self.pause = 1
+      
+      elif p1c.suit == "d":
+        # do math
+        if p2c.suit == "s":
+          # sub p1c.value
+          self.versay("sub " + str(p1c.value))
+          self.memory[self.pointer["x"]][self.pointer["y"]] -= p1c.value
+        elif p2c.suit == "c":
+          # add p1c.value
+          self.versay("add " + str(p1c.value))
+          self.memory[self.pointer["x"]][self.pointer["y"]] += p1c.value
+        if p2c.suit == "h":
+          # inc
+          self.versay("inc")
+          self.memory[self.pointer["x"]][self.pointer["y"]] += 1
+        elif p2c.suit == "d":
+          # dec
+          self.versay("dec")
+          self.memory[self.pointer["x"]][self.pointer["y"]] -= 1
+          
+        self.memory[self.pointer["x"]][self.pointer["y"]] %= 256
+            
+    else:
+      self.pause -= 1
   
   def battle(self):
     p1stakes = []
@@ -206,8 +326,11 @@ def main():
   parser.add_argument('-b', action="store_true", help="allow bracket notation in program")
   parser.add_argument('-l', action="store_true", help="run in legacy mode, disabling all v2.0 features")
   parser.add_argument("-s", type=int, default=-1, help="Only run S steps before stopping")
+  parser.add_argument("--verbose", action="store_true", help="show plenty of runtime information")
   parser.add_argument('ifile', help="file containing the program to be interpreted")
   args = parser.parse_args()
+  
+  shuff.verbose = args.verbose
   
   if(args.v):
     version()
