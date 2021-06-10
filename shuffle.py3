@@ -24,6 +24,25 @@ class ShuffleInter:
         print(i, end=" ")
       print()
       
+  def memToPgm(self):
+    out = "P2\n" # magic number
+    out += str(len(self.memory[0])) + " " # width
+    out += str(len(self.memory)) + "\n" # height
+    out += "255\n" # maximum value
+    for y in self.memory:
+      for x in y:
+        out += str(x) + " "
+      out += "\n"
+    return out
+    
+  def memToCsv(self):
+    out = ""
+    for y in self.memory:
+      for x in y:
+        out += str(x) + ","
+      out += "\n"
+    return out
+      
   def realign_memory(self):
     if self.pointer["y"] >= len(self.memory):
       for i in range(self.pointer["y"] + 1 - len(self.memory)):
@@ -340,6 +359,8 @@ def main():
   parser.add_argument('-l', action="store_true", help="run in legacy mode, disabling all v2.0 features")
   parser.add_argument("-s", type=int, default=-1, help="Only run S steps before stopping")
   parser.add_argument("--verbose", action="store_true", help="show plenty of runtime information")
+  parser.add_argument("--pgm", default="", help="Output the final memory map to file PGM")
+  parser.add_argument("--csv", default="", help="Output the final memory map to file CSV")
   parser.add_argument('ifile', help="file containing the program to be interpreted")
   args = parser.parse_args()
   
@@ -380,12 +401,32 @@ def main():
   if args.verbose:
     shuff.printMem()
     print()
-    
-  steps = args.s
-  while shuff.running and steps != 0:
-    if steps > 0:
-      steps -= 1
-    shuff.step()
+  
+  try:
+    steps = args.s
+    while shuff.running and steps != 0:
+      if steps > 0:
+        steps -= 1
+      shuff.step()
+  except KeyboardInterrupt:
+    pass
+  
+  if args.pgm != "":
+    try:
+      f = open(args.pgm, 'w+')
+      f.write(shuff.memToPgm())
+      f.close()
+    except:
+      print("Error writing to PGM file")
+      
+  if args.csv != "":
+    try:
+      f = open(args.csv, 'w+')
+      f.write(shuff.memToCsv())
+      f.close()
+    except:
+      print("Error writing to CSV file")
+      
   
 if __name__ == "__main__":
   main()
