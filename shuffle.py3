@@ -89,7 +89,7 @@ class ShuffleInter:
         elif p2c.suit == "d":
           # up
           self.versay("up")
-          self.pointer["x"] -= 1
+          self.pointer["y"] -= 1
         # the pointer might have moved outside of the initialized ares
         self.realign_memory()
       
@@ -247,7 +247,19 @@ class ShuffleInter:
     self.battle()
         
      
-      
+def cardsAllEq(d1, d2):
+  if len(d1) != len(d2):
+    return False
+  for i in range(len(d1)):
+    if not(d1[i].eq(d2[i])):
+      return False
+  return True
+  
+def copyDeck(deck):
+  d = []
+  for c in deck:
+    d.append(c)
+  return d  
     
 class Card:
   def __init__(self, suit, value):
@@ -259,6 +271,8 @@ class Card:
     self.value = value
   def print(self):
     print(self.suit + str(self.value), end="")
+  def eq(self, other):
+    return self.suit == other.suit and self.value == other.value
 
 def parseMemory(s):
   out = []
@@ -333,7 +347,7 @@ def parseDeck(deck, allow_bracket):
       elif parsing_bracket:
         if c == ']':
           try:
-            out.append(Card(bracket_suit, int(bracket_num)))
+            out.append(Card(bracket_suit.lower(), int(bracket_num)))
           except ValueError:
             print("Syntax Error: bracket card contains invalid number or suit")
             print("Suit: ", bracket_suit)
@@ -359,6 +373,7 @@ def main():
   parser.add_argument('-v', action="store_true", help="show version number")
   parser.add_argument('-b', action="store_true", help="allow bracket notation in program")
   parser.add_argument('-l', action="store_true", help="run in legacy mode, disabling all v2.0 features")
+  parser.add_argument('-p', action="store_true", help="Get length of cycle")
   parser.add_argument("-s", type=int, default=-1, help="Only run S steps before stopping")
   parser.add_argument("--verbose", action="store_true", help="show plenty of runtime information")
   parser.add_argument("--pgm", default="", help="Output the final memory map to file PGM")
@@ -405,12 +420,23 @@ def main():
     shuff.printMem()
     print()
   
+  if args.p:
+    starting_p1 = copyDeck(shuff.p1_cards)
+    starting_p2 = copyDeck(shuff.p2_cards)
   try:
+    period = 0
     steps = args.s
     while shuff.running and steps != 0:
       if steps > 0:
         steps -= 1
       shuff.step()
+      if args.p:
+        if period != -1:
+          period += 1
+          if cardsAllEq(starting_p1, shuff.p1_cards) and cardsAllEq(starting_p2, shuff.p2_cards):
+            print("Period:", period)
+            period = -1
+        
   except KeyboardInterrupt:
     pass
   
