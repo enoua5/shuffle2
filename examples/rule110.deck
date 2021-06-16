@@ -1,0 +1,218 @@
+Rule 110
+111 110 101 100 011 010 001 000
+ 0   1   1   0   1   1   1   0
+-
+This program does not have interactive IO. To set the starting
+state of the Rule 110 simulation, edit the last line of this program; use '1' to represent 1 and '255' to represent zero.
+To see the output of the program, use the --pgm or --csv opts
+in the default interpretor. Note, again, the program uses 255
+to represent 0.  
+-
+Rule 110 implementation using a bracket card to return to top.
+Bracket cards were avoided all other places. Because of this,
+There are relays throughout the program to extend jump ranges.
+-
+Explanation for below:
+Each row will contain the actual card that is ran,
+followed by a text representation of that card and
+the card it's paired with
+(the actual pair card is later)
+followed by a mnemonic that to explain what the program is doing.
+comments will be denoted with a #, sections with === text ===
+and labels with :text. This is just for human readablity,
+Shuffle has no comment character.
+High cards are >= 9 for this program
+-
+=== determine which loop is being performed ===
+🂾 Hk Sa skip if zero
+🂸 H8 Hk jump :update
+=== seek to beginning of line ===
+  🂮 Sk Da up
+  # if there is a zero, then we've found uninitialized memory
+  🂳 H3 Ck jump if zero :mark_end
+    🂮 Sk Ca left
+    🂡 Sa Hk down
+    🂹 H9 Ha jump :end
+  :mark_end
+    🂡 Sa Hk down
+    🃎 Dk Ha inc
+    🂶 H6 Hk jump :end
+=== update the current cell ===
+:update
+  🂮 Sk Da up
+  🂡 Sa Sk right
+  🂾 Hk Ca jump if zero :right_is_uninit
+  # check if it's -1, which we're using as 0
+  🃁 Da Hk inc
+  🂾 Hk Ca jump if zero :right_is_zero
+  === relay ===
+    🂱 Ha Dk skip
+    🂾 Hk Ha jump :end
+  ===       ===
+  🃁 Da Dk dec
+    # right is one possible states from here:
+    # 111 101 011 001
+    #  0   1   1   1 
+    # the only case for a 0 is if all else are 1
+    🂮 Sk Ca left
+    🃁 Da Dk dec
+    🂺 Hx Ca jump if zero :+continue
+      🃁 Da Hk inc
+      🂾 Hk Ha jump :write_one
+      🂱 Ha Hk (unconditionally skipped, used for spacing)
+      🂾 Hk Ha (unconditionally skipped, used for spacing)
+      === relay ===
+        🂱 Ha Dk skip
+        🂾 Hk Ha jump :right_is_uninit
+      ===       ===
+      === relay ===
+        🂱 Ha Dk skip
+        🂾 Hk Ha jump :right_is_zero
+      ===       ===
+      === relay ===
+        🂱 Ha Dk skip
+        🂾 Hk Ha jump :end
+      ===       ===
+    :+continue
+    🃁 Da Hk inc
+-
+    🂮 Sk Ca left
+    🃁 Da Dk dec
+    🂻 Hj Ca jump if zero :+continue
+      === relay ===
+        🂱 Ha Dk skip
+        🂾 Hk Ha jump :write_one
+      ===       ===
+      🃁 Da Hk inc
+      🂮 Sk Sa right
+      === relay ===
+        🂱 Ha Dk skip
+        🂺 Hx Ha jump :right_is_uninit
+      ===       ===
+      === relay ===
+        🂱 Ha Dk skip
+        🂻 Hj Ha jump :right_is_zero
+      ===       ===
+      === relay ===
+        🂱 Ha Dk skip
+        🂾 Hk Ha jump :end
+      ===       ===
+      🂴 H4 Hk jump :write_one
+    :+continue
+    🃎 Dk Ha inc
+    🂡 Sa Sk right
+    # if we've made it this far, they were all ones
+    🂻 Hj Ha jump :write_zero
+    === relay ===
+      🂱 Ha Dk skip
+      🂻 Hj Ha jump :write_one
+    ===       ===
+-
+  :right_is_uninit
+    🂡 Sa Ck left
+    🂮 Sk Ha down
+    === relay ===
+      🂱 Ha Dk skip
+      🂺 Hx Ha jump :right_is_zero
+    ===       ===
+    🃁 Da Dk dec
+    🂮 Sk Sa right
+    === relay ===
+      🂱 Ha Dk skip
+      🂹 H9 Ha jump :end
+    ===       ===
+    === relay ===
+      🂱 Ha Dk skip
+      🂹 H9 Ha jump :write_zero
+    ===       ===
+    === relay ===
+      🂱 Ha Dk skip
+      🂺 Hx Ha jump :write_one
+    ===       ===
+    🂡 Sa Dk up
+    🂾 Hk Da skip
+  :right_is_zero
+    # we reach here if right was -1, so we have to put it back as we found it
+    🃁 Da Dk dec
+  :+
+    # since right is zero, the possible states are:
+    # 110 100 010 000
+    #  1   0   1   0
+    # so the value to write is the center value
+    🂮 Sk Ca left
+    === relay ===
+      🂱 Ha Dk skip
+      🂾 Hk Ha jump :end
+    ===       ===
+    === relay ===
+      🂱 Ha Dk skip
+      🂽 Hq Ha jump :write_zero
+    ===       ===
+    🂶 H6 Ck jump if zero :write_zero_default
+    === relay ===
+      🂾 Hk Da skip
+      # actually hits a different jump command
+      🂳 H3 Hk jump :write_one
+    ===       ===
+    🃎 Dk Ha inc
+    🂸 H8 Ck jump if zero :write_zero_with_fix
+    🃎 Dk Da dec
+    # center was one
+    🂷 H7 Hk jump :write_one 
+-
+  :write_zero_default
+    🂮 Sk Ha down
+    🃁 Da Dk dec
+    🂮 Sk Da up
+    === relay ===
+      🂱 Ha Dk skip
+      🂾 Hk Ha jump :end
+    ===       ===
+    🂳 H3 Hk jump :write_zero
+  :write_zero_with_fix
+    === relay ===
+      🂾 Hk Da skip
+      🂸 H8 Hk jump :write_one
+    ===       ===
+    🃎 Dk Da dec
+  :write_zero
+    🂡 Sa Hk down
+    🂮 Sk Ha down
+    # padding to get the right high-low order for the jump
+    🂲 H2 Hk jump 2
+    🂾 Hk Ha (unconditionally ignored)
+    🂱 Ha Hk (unconditionally ignored)
+    🃎 Dk Da dec
+    🂵 H5 Hk jump :end_update
+-
+  :write_one
+  🂮 Sk Ha down
+  === relay ===
+    🂱 Ha Dk skip
+    🂺 Hx Ha jump :end
+  ===       ===
+  🂡 Sa Hk down
+  🃎 Dk Ha inc
+:end_update
+  🂡 Sa Dk up
+  🃎 Dk Ha inc
+  🂶 H6 Ck jump if zero :flag_seek
+    🂮 Sk Sa right
+    # padding to get the right high-low order for the jump
+    🂲 H2 Hk jump 2
+    🂾 Hk Ha (unconditionally ignored)
+    🂱 Ha Hk (unconditionally ignored)
+    🃎 Dk Ha inc
+    🂲 H2 Hk jump :end
+  :flag_seek
+    🂮 Sk Ha down
+    🂡 Sa Hk down
+:end
+Evil bracket card that jumps so far that I have no confidence I could make this program using regular cards
+[H12321] H(lots) Ha jump to beginning of program
+
+🂡🂾🃁🃞🃑🂾🂱🂾🂱🂾🃁🂮🃑🂾🃑🃎🂱🃎🃑🃎🃑🂾🂱🂾🂱🃎🂱🃎🂱🃎🂱🂾🃑🃎🃑🃎🂱🂾🂡🃎🂱🃎🂱🃎🂱🂾🂱🂮🂱🃎🂱🃞🂱🃎🂱🃎🂡🃎🂱🃎🂱🃎🂱🃎🃁🃎🃑🃎🂱🃎🂱🃞🃁🂾🂱🃞🃁🂾🂱🃎🃁🃎🂱🂾🃁🂾🃁🂾🂱🂾🂱🂾🃁🂾🂱🃎🂱🂾🂱🃎🂱🃞🂡🂾🂱🂾🂱🂾🂱🂾🂱🂾
+
+0 1
+
+1
