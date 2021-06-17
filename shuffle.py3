@@ -25,14 +25,14 @@ class ShuffleInter:
       print()
       
   def memToPgm(self):
-    out = "P2\n" # magic number
-    out += str(len(self.memory[0])) + " " # width
-    out += str(len(self.memory)) + "\n" # height
-    out += "255\n" # maximum value
+    enc = 'utf-8'
+    out = bytes("P5\n", enc) # magic number
+    out += bytes(str(len(self.memory[0])) + " ", enc) # width
+    out += bytes(str(len(self.memory)) + "\n", enc) # height
+    out += bytes("255\n", enc) # maximum value
     for y in self.memory:
       for x in y:
-        out += str(x) + " "
-      out += "\n"
+        out += bytes([x])
     return out
     
   def memToCsv(self):
@@ -442,7 +442,7 @@ def main():
   
   if args.pgm != "":
     try:
-      f = open(args.pgm, 'w+')
+      f = open(args.pgm, 'wb+')
       f.write(shuff.memToPgm())
       f.close()
     except:
